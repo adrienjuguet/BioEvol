@@ -5,6 +5,10 @@
 #include "Organism.h"
 #include "DNA.h"
 #include "Common.h"
+#include <omp.h>
+#include <iostream>
+
+using namespace std;
 
 
 void Organism::translate_RNA() {
@@ -252,28 +256,39 @@ void Organism::init_organism() {
 }
 
 void Organism::compute_protein_concentration() {
-  int rna_id = 0;
-  for (auto it = rna_list_.begin(); it != rna_list_.end(); it++) {
+  //int rna_id = 0;  
+  #pragma omp parallel for shared(rna_influence_)
+  //for (auto it = rna_list_.begin(); it != rna_list_.end(); it++) {
+  for (int rna_id = 0; rna_id < rna_list_.size(); rna_id++) {
     float delta_pos = 0, delta_neg = 0;
-    for (auto prot : rna_influence_[rna_id]) {
-      if (prot.second > 0)
-        delta_pos += prot.second * protein_list_map_[prot.first]->concentration_;
+    /*for (auto prot : rna_influence_[rna_id]) { 
+    if (prot.second > 0)
+      delta_pos += prot.second * protein_list_map_[prot.first]->concentration_;
       else
-        delta_neg -= prot.second * protein_list_map_[prot.first]->concentration_;
-    }
-
+      delta_neg -= prot.second * protein_list_map_[prot.first]->concentration_;
+    }  */
+	
+	auto prot = rna_influence_[rna_id].begin(); 
+	while (prot != rna_influence_[rna_id].end()){
+      if (prot->second > 0)
+      delta_pos += prot->second * protein_list_map_[prot->first]->concentration_;
+      else
+      delta_neg -= prot->second * protein_list_map_[prot->first]->concentration_;
+      prot++;
+    }  
     float delta_pos_pow_n = pow(delta_pos,Common::hill_shape_n);
     float delta_neg_pow_n = pow(delta_neg,Common::hill_shape_n);
 
-     rna_list_[rna_id]->current_concentration_ = rna_list_[rna_id]->concentration_base_
+    rna_list_[rna_id]->current_concentration_ = rna_list_[rna_id]->concentration_base_
                                * (Common::hill_shape
                                   / (delta_neg_pow_n + Common::hill_shape))
                                * (1 + ((1 / rna_list_[rna_id]->concentration_base_) - 1)
                                       * (delta_pos_pow_n /
                                          (delta_pos_pow_n +
                                              Common::hill_shape)));
-    rna_id++;
+    //rna_id++;
   }
+  
 
   std::unordered_map<float,float> delta_concentration;
   for (auto rna : rna_produce_protein_) {

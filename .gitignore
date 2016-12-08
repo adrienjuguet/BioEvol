@@ -27,3 +27,9 @@
 *.exe
 *.out
 *.app
+
+pdc_evol_model
+cmake_install.cmake
+CMakeFiles
+CMakeCache.txt
+Makefile
