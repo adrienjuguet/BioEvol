@@ -7,7 +7,7 @@
 
 
 #include <vector>
-#include <unordered_map>
+#include <map>
 #include "Move.h"
 #include "Pump.h"
 #include "Protein.h"
@@ -69,6 +69,8 @@ class Organism {
     void compute_protein_concentration();
 
     Organism* divide();
+    
+
 };
 
 #endif //PDC_EVOL_MODEL_ORGANISM_H

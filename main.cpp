@@ -1,10 +1,14 @@
 #include <iostream>
 #include "src/World.h"
 #include "src/Common.h"
+#include <chrono>
 
 using namespace std;
 
 int main() {
+	
+  auto begin = std::chrono::high_resolution_clock::now();
+	
   printf("Init binding matrix\n");
   Common::init_binding_matrix(897685687);
 
@@ -24,4 +28,7 @@ int main() {
     printf("Run evolution\n");
     world->run_evolution();
   }
+    auto end = std::chrono::high_resolution_clock::now();
+	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end-begin);
+	printf("DUREE EXECUTION : %ld\r\n", duration.count());
 }
