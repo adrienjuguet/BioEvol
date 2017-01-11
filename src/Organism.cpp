@@ -259,9 +259,6 @@ void Organism::init_organism() {
 }
 
 void Organism::compute_protein_concentration() {
-  //int rna_id = 0;  
-  //for (auto it = rna_list_.begin(); it != rna_list_.end(); it++) {
-  //#pragma omp parallel for
   #pragma omp simd
   for (int rna_id = 0; rna_id < rna_list_.size(); rna_id++) {
     float delta_pos = 0, delta_neg = 0;
@@ -277,10 +274,8 @@ void Organism::compute_protein_concentration() {
     float delta_pos_pow_n;
     float delta_neg_pow_n;
     
-    
     if (delta_pos == 0) delta_pos_pow_n = 0;
 	else { 
-		//#pragma omp critical (pos)
 		{
 			auto it = cache_pos.find(delta_pos);
 			if (it != cache_pos.end())
@@ -299,11 +294,8 @@ void Organism::compute_protein_concentration() {
 	
 	
 	
-	if (delta_neg == 0) delta_neg_pow_n = 0;
-	
+	if (delta_neg == 0) delta_neg_pow_n = 0;	
 	else {
-		//#pragma omp critical (neg)
-		{
 			auto it_neg = cache_neg.find(delta_pos);
 			if (it_neg != cache_neg.end()) 
 			{
@@ -315,7 +307,6 @@ void Organism::compute_protein_concentration() {
 				cache_neg.insert({delta_neg, delta_neg_pow_n});
 				//cout << "Cache neg miss : " << delta_neg <<" , "<< delta_neg_pow_n<< endl;
 			}
-		}
 	}	
     rna_list_[rna_id]->current_concentration_ = rna_list_[rna_id]->concentration_base_
                                * (Common::hill_shape
