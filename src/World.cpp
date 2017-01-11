@@ -5,7 +5,6 @@
 #include "World.h"
 #include "DNA.h"
 #include "Organism.h"
-//#include "GraphicDisplay.h"
 #include <omp.h>
 
 
@@ -90,7 +89,6 @@ void World::init_environment() {
 }
 
 void World::run_evolution() {
-  //GraphicDisplay* display = new GraphicDisplay(this);
   while (time_ < Common::Number_Evolution_Step) {
     evolution_step();
     int living_one = 0;
@@ -102,7 +100,6 @@ void World::run_evolution() {
       }
     }
 
-    //display->display();
     stats();
     if (time_%100 == 0) {
       printf(
@@ -123,18 +120,18 @@ void World::evolution_step() {
   max_fitness_ = 0;
 
   Organism* best;
-
+//--Ancienne version
+/**
   for (int i = 0; i < width_; i++) {
     for (int j = 0; j < height_; j++) {
       if (grid_cell_[i * width_ + j]->organism_ != nullptr) {
         grid_cell_[i * width_ + j]->organism_->activate_pump();
         grid_cell_[i * width_ + j]->organism_->build_regulation_network();
-
-	#pragma omp parallel for
-        for (int t = 0; t < Common::Number_Degradation_Step; t++)
-          grid_cell_[i * width_ +
-                     j]->organism_->compute_protein_concentration();
-	#pragma omp barrier
+		for (int t = 0; t < Common::Number_Degradation_Step; t++)
+		{
+		  grid_cell_[i * width_ +
+					 j]->organism_->compute_protein_concentration();
+		}
         if (grid_cell_[i * width_ + j]->organism_->dying_or_not()) {
           delete grid_cell_[i * width_ + j]->organism_;
           grid_cell_[i * width_ + j]->organism_ = nullptr;
@@ -142,6 +139,25 @@ void World::evolution_step() {
         }
       }
     }
+  }
+ **/
+  
+//--Version parallèle
+#pragma omp parallel for
+  for (int i = 0; i < width_*height_; i++) {
+      if (grid_cell_[i]->organism_ != nullptr) {
+        grid_cell_[i]->organism_->activate_pump();
+        grid_cell_[i]->organism_->build_regulation_network();
+		for (int t = 0; t < Common::Number_Degradation_Step; t++)
+		{
+		  grid_cell_[i]->organism_->compute_protein_concentration();
+		}
+        if (grid_cell_[i]->organism_->dying_or_not()) {
+          delete grid_cell_[i]->organism_;
+          grid_cell_[i]->organism_ = nullptr;
+          death_++;
+        }
+      }
   }
 /*
   printf("Move\n");
