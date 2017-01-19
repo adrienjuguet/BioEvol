@@ -98,6 +98,7 @@ void World::run_evolution() {
         }
       }
     }
+
     stats();
     if (time_%100 == 0) {
       printf(
@@ -165,7 +166,6 @@ void World::evolution_step() {
                 }
              }
           }
-        
 
         if (org_n != nullptr) {
           new_mutant_++;
@@ -178,8 +178,6 @@ void World::evolution_step() {
       }
   }
 
-
-  /**VERSION CPU OPENMP**/
   for (int i = 0; i < width_*height_; i++) {
       grid_cell_[i]->diffuse_protein();
       grid_cell_[i]->degrade_protein();
