@@ -5,8 +5,6 @@
 #include "World.h"
 #include "DNA.h"
 #include "Organism.h"
-#include <omp.h>
-
 
 World::World(int width, int height, uint32_t seed) {
   width_ = width;
@@ -121,7 +119,7 @@ void World::evolution_step() {
 
   Organism* best;
 
-  #pragma omp parallel for
+
   for (int i = 0; i < width_*height_; i++) {
       if (grid_cell_[i]->organism_ != nullptr) {
         grid_cell_[i]->organism_->activate_pump();
@@ -138,7 +136,6 @@ void World::evolution_step() {
       }
   }
 
-  #pragma omp parallel for 
   for (int i = 0; i < width_*height_; i++) {
       if (grid_cell_[i]->organism_ != nullptr) {
 
@@ -153,7 +150,6 @@ void World::evolution_step() {
       }
   }
 
-  #pragma omp parallel for
   for (int i = 0; i < width_*height_; i++) {
       if (grid_cell_[i]->organism_ == nullptr) {
         Organism* org_n = nullptr;
@@ -170,7 +166,6 @@ void World::evolution_step() {
                 }
              }
           }
-        
 
         if (org_n != nullptr) {
           new_mutant_++;
@@ -183,7 +178,6 @@ void World::evolution_step() {
       }
   }
 
-  #pragma omp parallel for
   for (int i = 0; i < width_*height_; i++) {
       grid_cell_[i]->diffuse_protein();
       grid_cell_[i]->degrade_protein();
