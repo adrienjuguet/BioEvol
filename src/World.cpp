@@ -5,6 +5,8 @@
 #include "World.h"
 #include "DNA.h"
 #include "Organism.h"
+#include "GraphicDisplay.h"
+#include "Cuda.h"
 
 World::World(int width, int height, uint32_t seed) {
   width_ = width;
@@ -87,6 +89,7 @@ void World::init_environment() {
 }
 
 void World::run_evolution() {
+  GraphicDisplay* display = new GraphicDisplay(this);
   while (time_ < Common::Number_Evolution_Step) {
     evolution_step();
     int living_one = 0;
@@ -98,6 +101,7 @@ void World::run_evolution() {
       }
     }
 
+    display->display();
     stats();
     if (time_%100 == 0) {
       printf(
@@ -118,16 +122,15 @@ void World::evolution_step() {
   max_fitness_ = 0;
 
   Organism* best;
-
-
+  
   for (int i = 0; i < width_*height_; i++) {
       if (grid_cell_[i]->organism_ != nullptr) {
         grid_cell_[i]->organism_->activate_pump();
         grid_cell_[i]->organism_->build_regulation_network();
-		for (int t = 0; t < Common::Number_Degradation_Step; t++)
-		{
-		  grid_cell_[i]->organism_->compute_protein_concentration();
-		}
+                for (int t = 0; t < Common::Number_Degradation_Step; t++)
+                {
+                  grid_cell_[i]->organism_->compute_protein_concentration();
+                }
         if (grid_cell_[i]->organism_->dying_or_not()) {
           delete grid_cell_[i]->organism_;
           grid_cell_[i]->organism_ = nullptr;
@@ -166,6 +169,7 @@ void World::evolution_step() {
                 }
              }
           }
+        
 
         if (org_n != nullptr) {
           new_mutant_++;
@@ -178,11 +182,19 @@ void World::evolution_step() {
       }
   }
 
+
+  /**VERSION CPU OPENMP**/
   for (int i = 0; i < width_*height_; i++) {
       grid_cell_[i]->diffuse_protein();
       grid_cell_[i]->degrade_protein();
   }
+
+  /**VERSION GPU CUDA**/
+  cuda_call4(height_, width_, grid_cell_);
+
 }
+
+
 
 void World::test_mutate() {
 

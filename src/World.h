@@ -14,7 +14,7 @@
 #include <fstream>
 
 class GridCell;
-
+void cuda_call(int height, int width, GridCell** CpuGrid);
 class World {
  public:
     World(int width, int height, uint32_t seed);
@@ -46,7 +46,7 @@ class World {
     void init_environment();
 
     void stats();
-};
 
+};
 
 #endif //PDC_EVOL_MODEL_WORLD_H
