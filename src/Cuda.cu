@@ -12,40 +12,44 @@ void kernel(GridCell *inGpuGrid, GridCell *outGpuGrid, long gridSize){
 
 }
 
-void cuda_call4(int height, int width, GridCell** CpuGrid){
-	
+void cuda_call4(int height, int width, GridCell** CpuGrid)
+{	
 	long gridSize = sizeof(GridCell)*height*width;
-	std::cout<<gridSize<<std::endl;
-	GridCell * inGpuGrid;
-	cudaError_t ok = cudaMalloc((void**) &inGpuGrid, gridSize);
+        GridCell * inGpuGrid;
+        GridCell * outGpuGrid;
+        cudaError_t ok;
+	
+	/**Allocation mémoire GPU**/
+	ok = cudaMalloc((void**) &inGpuGrid, gridSize);
 	if(ok != cudaSuccess)
 	{
 		std::cout << "Erreur d'allocation mémoire in !  Code d'erreur : "<< ok <<" : " << cudaGetErrorString(ok)<< std::endl;
 		return;
 	}
-	
-	GridCell * outGpuGrid;
+
 	ok = cudaMalloc((void**) &outGpuGrid, gridSize);
 	if(ok != cudaSuccess)
 	{
 		std::cout << "Erreur d'allocation mémoire out !  Code d'erreur : "<< ok <<" : " << cudaGetErrorString(ok)<< std::endl;
 		return;
 	}
+	/**************************/
 	
+	/**Init inGpuGrid**/
 	ok = cudaMemcpy(inGpuGrid, CpuGrid, gridSize,cudaMemcpyHostToDevice);
 	if(ok != cudaSuccess)
 	{
 		std::cout << "Erreur de copie mémoire in !  Code d'erreur : "<< ok <<" : " << cudaGetErrorString(ok)<< std::endl;
 		return;
 	}
-	
+	/******************/
+
 	dim3 dimBlock(32,32);
 	dim3 dimGrid(width/dimBlock.x, height/dimBlock.y);
 	
 	kernel<<<dimGrid, dimBlock>>>(inGpuGrid, outGpuGrid, gridSize);
 	
 	cudaThreadSynchronize();
-	
 	ok = cudaGetLastError();
 	if(ok != cudaSuccess)
 	{
@@ -53,13 +57,16 @@ void cuda_call4(int height, int width, GridCell** CpuGrid){
 		return;
 	}
 		
-	ok = cudaMemcpy(CpuGrid, outGpuGrid, gridSize, cudaMemcpyDeviceToHost);
+	/**Récupération des valeurs sur le CPU**/
+	/*ok = cudaMemcpy(CpuGrid, outGpuGrid, gridSize, cudaMemcpyDeviceToHost);
 	if(ok != cudaSuccess)
 	{
-		std::cout << "Erreur de copie mémoire out !  Code d'erreur : "< <ok <<" : " << cudaGetErrorString(ok)<< std::endl;
+		std::cout << "Erreur de copie mémoire out !  Code d'erreur : "<<ok <<" : " << cudaGetErrorString(ok)<< std::endl;
 		return;
-	}
+	}*/
+	/***************************************/
 	
+	/**Libération de la mémoire**/
 	ok = cudaFree(inGpuGrid);
 	if(ok != cudaSuccess)
 	{
@@ -72,7 +79,7 @@ void cuda_call4(int height, int width, GridCell** CpuGrid){
 		std::cout << "Erreur de libération mémoire out !  Code d'erreur : "<< ok <<" : " << cudaGetErrorString(ok)<< std::endl;
 		return;
 	}
-
+	/****************************/
 }
 
 
