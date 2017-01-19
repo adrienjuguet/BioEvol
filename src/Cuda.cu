@@ -8,8 +8,6 @@ void kernel(GridCell *inGpuGrid, GridCell *outGpuGrid, long gridSize){
       grid_cell_[i]->diffuse_protein();
       grid_cell_[i]->degrade_protein();
   	}*/
-
-
 }
 
 void cuda_call4(int height, int width, GridCell** CpuGrid){
@@ -56,7 +54,7 @@ void cuda_call4(int height, int width, GridCell** CpuGrid){
 	ok = cudaMemcpy(CpuGrid, outGpuGrid, gridSize, cudaMemcpyDeviceToHost);
 	if(ok != cudaSuccess)
 	{
-		std::cout << "Erreur de copie mémoire out !  Code d'erreur : "< <ok <<" : " << cudaGetErrorString(ok)<< std::endl;
+		std::cout << "Erreur de copie mémoire out !  Code d'erreur : "<< ok <<" : " << cudaGetErrorString(ok)<< std::endl;
 		return;
 	}
 	
