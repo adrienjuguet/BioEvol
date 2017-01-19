@@ -33,3 +33,6 @@ cmake_install.cmake
 CMakeFiles
 CMakeCache.txt
 Makefile
+stats_best.txt 
+stats_mean.txt
+
