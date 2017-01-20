@@ -7,6 +7,7 @@
 #include "Common.h"
 #include <omp.h>
 #include <iostream>
+#include <iterator>
 
 using namespace std;
 
@@ -259,15 +260,27 @@ void Organism::init_organism() {
 }
 
 void Organism::compute_protein_concentration() {
-  #pragma omp simd
+  //#pragma omp simd
   for (int rna_id = 0; rna_id < rna_list_.size(); rna_id++) {
     float delta_pos = 0, delta_neg = 0;
-    for (auto prot : rna_influence_[rna_id]) { 
-    if (prot.second > 0)
-      delta_pos += prot.second * protein_list_map_[prot.first]->concentration_;
-      else
-      delta_neg -= prot.second * protein_list_map_[prot.first]->concentration_;
-    }
+
+    #pragma omp parallel for
+    for(int i = 0; i< rna_influence_[rna_id].size(); i++)
+      {
+	auto prot = rna_influence_[rna_id].begin();
+	advance(prot, i);
+	if ((*prot).second > 0)
+	  delta_pos += (*prot).second * protein_list_map_[(*prot).first]->concentration_;
+	else
+	  delta_neg -= (*prot).second * protein_list_map_[(*prot).first]->concentration_;
+      }
+    
+    // for (auto prot : rna_influence_[rna_id]) { 
+    // if (prot.second > 0)
+    //   delta_pos += prot.second * protein_list_map_[prot.first]->concentration_;
+    //   else
+    //   delta_neg -= prot.second * protein_list_map_[prot.first]->concentration_;
+    // }
 	
 	auto prot = rna_influence_[rna_id].begin(); 
 
