@@ -260,11 +260,11 @@ void Organism::init_organism() {
 }
 
 void Organism::compute_protein_concentration() {
-  //#pragma omp simd
+  #pragma omp simd
   for (int rna_id = 0; rna_id < rna_list_.size(); rna_id++) {
     float delta_pos = 0, delta_neg = 0;
 
-    #pragma omp parallel for
+    //#pragma omp parallel for
     for(int i = 0; i< rna_influence_[rna_id].size(); i++)
       {
 	auto prot = rna_influence_[rna_id].begin();
