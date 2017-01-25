@@ -184,7 +184,7 @@ void World::evolution_step() {
   }
 
   /**VERSION GPU CUDA**/
-  cuda_call4(height_, width_, grid_cell_);
+  //cuda_call4(height_, width_, grid_cell_);
 }
 
 

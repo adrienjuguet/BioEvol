@@ -7,6 +7,7 @@
 #include "Common.h"
 #include <omp.h>
 #include <iostream>
+#include "Cuda.h"
 
 using namespace std;
 
@@ -340,6 +341,10 @@ void Organism::compute_protein_concentration() {
 
 bool Organism::dying_or_not() {
   // Compute if dying or not
+  /**CUDA**/
+  cuda_call_protein(protein_fitness_list_);
+  
+  /**NORMAL**/
   double concentration_sum = 0;
   for (auto prot : protein_fitness_list_) {
     concentration_sum+=prot->concentration_;

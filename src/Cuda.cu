@@ -3,29 +3,32 @@
 
 /****************************CUDA****************************/
 __global__
-void kernel(GridCell *inGpuGrid, GridCell *outGpuGrid, long gridSize){
+void kernel_organism_dyingornot(Protein **inGpuProtein, double outGpuProtein, long proteinSize){
 	/*for (int i = 0; i < width_*height_; i++) {
       grid_cell_[i]->diffuse_protein();
       grid_cell_[i]->degrade_protein();
   	}*/
 }
 
-void cuda_call4(int height, int width, GridCell** CpuGrid)
+void cuda_call_protein(std::vector<Protein*> cpuProtein)
 {	
-	long gridSize = sizeof(GridCell)*height*width;
-        GridCell * inGpuGrid;
-        GridCell * outGpuGrid;
+	Protein** protein_iterator = &cpuProtein[0];
+	long vectorSize = cpuProtein.size();
+	
+	long proteinSize = sizeof(Protein*)*vectorSize;
+        Protein ** inGpuProtein;
+        double * outGpuProtein;
         cudaError_t ok;
 	
 	/**Allocation mémoire GPU**/
-	ok = cudaMalloc((void**) &inGpuGrid, gridSize);
+	ok = cudaMalloc((void**) &inGpuProtein, proteinSize);
 	if(ok != cudaSuccess)
 	{
 		std::cout << "Erreur d'allocation mémoire in !  Code d'erreur : "<< ok <<" : " << cudaGetErrorString(ok)<< std::endl;
 		return;
 	}
 
-	ok = cudaMalloc((void**) &outGpuGrid, gridSize);
+	ok = cudaMalloc((void**) &outGpuProtein, sizeof(double));
 	if(ok != cudaSuccess)
 	{
 		std::cout << "Erreur d'allocation mémoire out !  Code d'erreur : "<< ok <<" : " << cudaGetErrorString(ok)<< std::endl;
@@ -33,8 +36,8 @@ void cuda_call4(int height, int width, GridCell** CpuGrid)
 	}
 	/**************************/
 	
-	/**Init inGpuGrid**/
-	ok = cudaMemcpy(inGpuGrid, CpuGrid, gridSize,cudaMemcpyHostToDevice);
+	/**Init inGpuProtein**/
+	ok = cudaMemcpy(inGpuProtein, protein_iterator, proteinSize,cudaMemcpyHostToDevice);
 	if(ok != cudaSuccess)
 	{
 		std::cout << "Erreur de copie mémoire in !  Code d'erreur : "<< ok <<" : " << cudaGetErrorString(ok)<< std::endl;
@@ -42,10 +45,10 @@ void cuda_call4(int height, int width, GridCell** CpuGrid)
 	}
 	/******************/
 
-	dim3 dimBlock(32,32);
-	dim3 dimGrid(width/dimBlock.x, height/dimBlock.y);
+	dim3 dimBlock(32);
+	dim3 dimGrid(proteinSize/dimBlock.x);
 	
-	kernel<<<dimGrid, dimBlock>>>(inGpuGrid, outGpuGrid, gridSize);
+	kernel_organism_dyingornot<<<dimGrid, dimBlock>>>(inGpuProtein, * outGpuProtein, proteinSize);
 	
 	cudaThreadSynchronize();
 	ok = cudaGetLastError();
@@ -56,22 +59,23 @@ void cuda_call4(int height, int width, GridCell** CpuGrid)
 	}
 		
 	/**Récupération des valeurs sur le CPU**/
-	/*ok = cudaMemcpy(CpuGrid, outGpuGrid, gridSize, cudaMemcpyDeviceToHost);
+	double * sum;
+	ok = cudaMemcpy(sum, outGpuProtein, proteinSize, cudaMemcpyDeviceToHost);
 	if(ok != cudaSuccess)
 	{
 		std::cout << "Erreur de copie mémoire out !  Code d'erreur : "<< ok <<" : " << cudaGetErrorString(ok)<< std::endl;
 		return;
-	}*/
+	}
 	/***************************************/
 	
 	/**Libération de la mémoire**/
-	ok = cudaFree(inGpuGrid);
+	ok = cudaFree(inGpuProtein);
 	if(ok != cudaSuccess)
 	{
 		std::cout << "Erreur de libération mémoire in !  Code d'erreur : "<< ok <<" : " << cudaGetErrorString(ok) << std::endl;
 		return;
 	}
-	ok = cudaFree(outGpuGrid);
+	ok = cudaFree(outGpuProtein);
 	if(ok != cudaSuccess)
 	{
 		std::cout << "Erreur de libération mémoire out !  Code d'erreur : "<< ok <<" : " << cudaGetErrorString(ok)<< std::endl;
