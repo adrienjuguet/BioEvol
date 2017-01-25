@@ -3,32 +3,41 @@
 
 /****************************CUDA****************************/
 __global__
-void kernel_organism_dyingornot(Protein **inGpuProtein, double outGpuProtein, long proteinSize){
-	/*for (int i = 0; i < width_*height_; i++) {
-      grid_cell_[i]->diffuse_protein();
-      grid_cell_[i]->degrade_protein();
-  	}*/
+void kernel_sum_metabolic_error(GridCell * inGpuGridCell, float * inGpuMetabolic,float * outSum, int metabolic_size)
+{
+	/*
+  for (int i = 0; i < Common::Metabolic_Error_Precision; i++) {
+    sum_metabolic_error+=std::abs(gridcell_->environment_target[i]-metabolic_error[i]);
+  }
+  	*/
 }
 
-void cuda_call_protein(std::vector<Protein*> cpuProtein)
-{	
-	Protein** protein_iterator = &cpuProtein[0];
-	long vectorSize = cpuProtein.size();
+void cuda_call_sum_metabolic_error(int metabolic_size, GridCell* gridcell, float* metabolic)
+{		
 	
-	long proteinSize = sizeof(Protein*)*vectorSize;
-        Protein ** inGpuProtein;
-        double * outGpuProtein;
-        cudaError_t ok;
+	long metabolicSize = sizeof(float)*metabolic_size;
+	
+	GridCell* inGpuGridCell;
+	float * inGpuMetabolic;
+	float * outSum;
+	cudaError_t ok;
 	
 	/**Allocation mémoire GPU**/
-	ok = cudaMalloc((void**) &inGpuProtein, proteinSize);
+	ok = cudaMalloc((void**) &inGpuGridCell, sizeof(GridCell*));
 	if(ok != cudaSuccess)
 	{
-		std::cout << "Erreur d'allocation mémoire in !  Code d'erreur : "<< ok <<" : " << cudaGetErrorString(ok)<< std::endl;
+		std::cout << "Erreur d'allocation mémoire inGpuGridCell !  Code d'erreur : "<< ok <<" : " << cudaGetErrorString(ok)<< std::endl;
+		return;
+	}
+	
+	ok = cudaMalloc((void**) &inGpuMetabolic, metabolicSize);
+	if(ok != cudaSuccess)
+	{
+		std::cout << "Erreur d'allocation mémoire inGpuMetabolic !  Code d'erreur : "<< ok <<" : " << cudaGetErrorString(ok)<< std::endl;
 		return;
 	}
 
-	ok = cudaMalloc((void**) &outGpuProtein, sizeof(double));
+	ok = cudaMalloc((void**) &outSum, sizeof(float));
 	if(ok != cudaSuccess)
 	{
 		std::cout << "Erreur d'allocation mémoire out !  Code d'erreur : "<< ok <<" : " << cudaGetErrorString(ok)<< std::endl;
@@ -36,19 +45,25 @@ void cuda_call_protein(std::vector<Protein*> cpuProtein)
 	}
 	/**************************/
 	
-	/**Init inGpuProtein**/
-	ok = cudaMemcpy(inGpuProtein, protein_iterator, proteinSize,cudaMemcpyHostToDevice);
+	/**Init inGpuGridCell & inGpuMetabolic**/
+	ok = cudaMemcpy(inGpuGridCell, gridcell, sizeof(GridCell*),cudaMemcpyHostToDevice);
 	if(ok != cudaSuccess)
 	{
-		std::cout << "Erreur de copie mémoire in !  Code d'erreur : "<< ok <<" : " << cudaGetErrorString(ok)<< std::endl;
+		std::cout << "Erreur de copie mémoire inGpuGridCell !  Code d'erreur : "<< ok <<" : " << cudaGetErrorString(ok)<< std::endl;
+		return;
+	}
+	ok = cudaMemcpy(inGpuMetabolic, metabolic, metabolicSize,cudaMemcpyHostToDevice);
+	if(ok != cudaSuccess)
+	{
+		std::cout << "Erreur de copie mémoire inGpuMetabolic !  Code d'erreur : "<< ok <<" : " << cudaGetErrorString(ok)<< std::endl;
 		return;
 	}
 	/******************/
 
 	dim3 dimBlock(32);
-	dim3 dimGrid(proteinSize/dimBlock.x);
+	dim3 dimGrid(metabolicSize/dimBlock.x);
 	
-	kernel_organism_dyingornot<<<dimGrid, dimBlock>>>(inGpuProtein, * outGpuProtein, proteinSize);
+	kernel_sum_metabolic_error<<<dimGrid, dimBlock>>>(inGpuGridCell, inGpuMetabolic, outSum, metabolic_size);
 	
 	cudaThreadSynchronize();
 	ok = cudaGetLastError();
@@ -59,26 +74,32 @@ void cuda_call_protein(std::vector<Protein*> cpuProtein)
 	}
 		
 	/**Récupération des valeurs sur le CPU**/
-	double * sum;
-	ok = cudaMemcpy(sum, outGpuProtein, proteinSize, cudaMemcpyDeviceToHost);
+	/*double * sum;
+	ok = cudaMemcpy(sum, outSum, sizeof(float), cudaMemcpyDeviceToHost);
 	if(ok != cudaSuccess)
 	{
 		std::cout << "Erreur de copie mémoire out !  Code d'erreur : "<< ok <<" : " << cudaGetErrorString(ok)<< std::endl;
 		return;
-	}
+	}*/
 	/***************************************/
 	
 	/**Libération de la mémoire**/
-	ok = cudaFree(inGpuProtein);
+	ok = cudaFree(inGpuGridCell);
 	if(ok != cudaSuccess)
 	{
-		std::cout << "Erreur de libération mémoire in !  Code d'erreur : "<< ok <<" : " << cudaGetErrorString(ok) << std::endl;
+		std::cout << "Erreur de libération mémoire inGpuGridCell !  Code d'erreur : "<< ok <<" : " << cudaGetErrorString(ok) << std::endl;
 		return;
 	}
-	ok = cudaFree(outGpuProtein);
+	ok = cudaFree(inGpuMetabolic);
 	if(ok != cudaSuccess)
 	{
-		std::cout << "Erreur de libération mémoire out !  Code d'erreur : "<< ok <<" : " << cudaGetErrorString(ok)<< std::endl;
+		std::cout << "Erreur de libération mémoire inGpuMetabolic !  Code d'erreur : "<< ok <<" : " << cudaGetErrorString(ok)<< std::endl;
+		return;
+	}
+	ok = cudaFree(outSum);
+	if(ok != cudaSuccess)
+	{
+		std::cout << "Erreur de libération mémoire outSum !  Code d'erreur : "<< ok <<" : " << cudaGetErrorString(ok)<< std::endl;
 		return;
 	}
 	/****************************/
