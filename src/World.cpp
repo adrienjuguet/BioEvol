@@ -61,12 +61,11 @@ void World::random_population() {
   max_fitness_ = org->fitness_;
 
   printf("Found !\nFilling the grid\n");
-  for (int i = 0; i < width_; i++) {
-    for (int j=0; j < height_; j++) {
-      grid_cell_[i*width_+j]->organism_ = new Organism(new DNA(org->dna_));
-      grid_cell_[i*width_+j]->organism_->init_organism();
-      grid_cell_[i*width_+j]->organism_->gridcell_ = grid_cell_[i*width_+j];
-    }
+  #pragma omp parallel for
+  for (int i = 0; i < width_*height_; i++) {
+      grid_cell_[i]->organism_ = new Organism(new DNA(org->dna_));
+      grid_cell_[i]->organism_->init_organism();
+      grid_cell_[i]->organism_->gridcell_ = grid_cell_[i];
   }
 
   delete org;
@@ -75,20 +74,22 @@ void World::random_population() {
 void World::init_environment() {
   float env[Common::Metabolic_Error_Precision];
   std::uniform_real_distribution<float> dis(0,1);
+  
   for (int i = 0; i < Common::Metabolic_Error_Precision; i++)
     env[i] = dis(global_gen_);
 
-  for (int i = 0; i < width_; i++) {
-    for (int j = 0; j < height_; j++) {
-      for (int k = 0; k < Common::Metabolic_Error_Precision; k++) {
-        grid_cell_[i * width_ + j]->environment_target[k] = env[k];
-      }
-    }
+  #pragma omp parallel for
+  for (int i = 0; i < width_*height_; i++) {
+	  for (int k = 0; k < Common::Metabolic_Error_Precision; k++) {
+		grid_cell_[i]->environment_target[k] = env[k];
+	  }
+    
   }
 
 }
 
 void World::run_evolution() {
+  #pragma omp simd
   while (time_ < Common::Number_Evolution_Step) {
     evolution_step();
     int living_one = 0;
@@ -281,34 +282,33 @@ void World::stats() {
   float avg_dupli_sucess = 0;
   float nb_indiv=0;
 
-  for (int i = 0; i < width_; i++) {
-    for (int j = 0; j < height_; j++) {
+  #pragma omp parallel for
+  for (int i = 0; i < width_*height_; i++) {
 
-      if (grid_cell_[i * width_ + j]->organism_ != nullptr) {
-        if (grid_cell_[i * width_ + j]->organism_->fitness_< best_fitness) {
-          best = grid_cell_[i * width_ + j]->organism_;
-          best_fitness = grid_cell_[i * width_ + j]->organism_->fitness_;
+      if (grid_cell_[i]->organism_ != nullptr) {
+        if (grid_cell_[i]->organism_->fitness_< best_fitness) {
+          best = grid_cell_[i]->organism_;
+          best_fitness = grid_cell_[i]->organism_->fitness_;
         }
 
         nb_indiv++;
 
-        avg_fitness+=grid_cell_[i * width_ + j]->organism_->fitness_;
-        avg_meta_error+=grid_cell_[i * width_ + j]->organism_->sum_metabolic_error;
-        avg_dna_size+=grid_cell_[i * width_ + j]->organism_->dna_->bp_list_.size();
-        avg_protein+=grid_cell_[i * width_ + j]->organism_->protein_list_map_.size();
-        avg_protein_fitness+=grid_cell_[i * width_ + j]->organism_->protein_fitness_list_.size();
-        avg_protein_pure_TF+=grid_cell_[i * width_ + j]->organism_->protein_TF_list_.size();
-        avg_protein_poison+=grid_cell_[i * width_ + j]->organism_->protein_poison_list_.size();
-        avg_protein_anti_poison+=grid_cell_[i * width_ + j]->organism_->protein_antipoison_list_.size();
-        avg_pump+=grid_cell_[i * width_ + j]->organism_->pump_list_.size();
-        avg_move+=grid_cell_[i * width_ + j]->organism_->move_list_.size();
-        avg_nb_rna+=grid_cell_[i * width_ + j]->organism_->rna_list_.size();
-        avg_network_size+=grid_cell_[i * width_ + j]->organism_->rna_influence_.size();
-        avg_life_duration+=grid_cell_[i * width_ + j]->organism_->life_duration_;
-        avg_move_success+=grid_cell_[i * width_ + j]->organism_->move_success_;
-        avg_dupli_sucess+=grid_cell_[i * width_ + j]->organism_->dupli_success_;
+        avg_fitness+=grid_cell_[i]->organism_->fitness_;
+        avg_meta_error+=grid_cell_[i]->organism_->sum_metabolic_error;
+        avg_dna_size+=grid_cell_[i]->organism_->dna_->bp_list_.size();
+        avg_protein+=grid_cell_[i]->organism_->protein_list_map_.size();
+        avg_protein_fitness+=grid_cell_[i]->organism_->protein_fitness_list_.size();
+        avg_protein_pure_TF+=grid_cell_[i]->organism_->protein_TF_list_.size();
+        avg_protein_poison+=grid_cell_[i]->organism_->protein_poison_list_.size();
+        avg_protein_anti_poison+=grid_cell_[i]->organism_->protein_antipoison_list_.size();
+        avg_pump+=grid_cell_[i]->organism_->pump_list_.size();
+        avg_move+=grid_cell_[i]->organism_->move_list_.size();
+        avg_nb_rna+=grid_cell_[i]->organism_->rna_list_.size();
+        avg_network_size+=grid_cell_[i]->organism_->rna_influence_.size();
+        avg_life_duration+=grid_cell_[i]->organism_->life_duration_;
+        avg_move_success+=grid_cell_[i]->organism_->move_success_;
+        avg_dupli_sucess+=grid_cell_[i]->organism_->dupli_success_;
       }
-    }
   }
 
   avg_fitness/=nb_indiv;
