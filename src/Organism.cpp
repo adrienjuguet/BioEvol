@@ -437,7 +437,7 @@ void Organism::compute_fitness() {
     }
   }
 	/**CUDA**/
-	cuda_call_sum_metabolic_error(Common::Metabolic_Error_Precision, gridcell_, metabolic_error);
+	float lala = cuda_call_sum_metabolic_error(Common::Metabolic_Error_Precision, gridcell_, metabolic_error);
 	/**NORMAL**/
   sum_metabolic_error = 0;
   for (int i = 0; i < Common::Metabolic_Error_Precision; i++) {
