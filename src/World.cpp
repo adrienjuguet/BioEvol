@@ -6,7 +6,7 @@
 #include "DNA.h"
 #include "Organism.h"
 #include <omp.h>
-
+#include "main.h"
 
 World::World(int width, int height, uint32_t seed) {
   width_ = width;
@@ -34,7 +34,7 @@ void World::random_population() {
   float fitness = 0.0;
   Organism* org = nullptr;
   DNA* dna = nullptr;
-  printf("Searching for a viable organism ");
+  PRINT("Searching for a viable organism ");
 
   long i = 0;
   while (fitness <= 0.0) {
@@ -51,7 +51,7 @@ void World::random_population() {
     if (org->dying_or_not()) {
       fitness = 0;
     }
-    printf(".");
+    PRINT(".");
     delete dna;
     //if (i%100==0) printf(".");
     i++;
@@ -60,7 +60,7 @@ void World::random_population() {
   min_fitness_ = org->fitness_;
   max_fitness_ = org->fitness_;
 
-  printf("Found !\nFilling the grid\n");
+  PRINT("Found !\nFilling the grid\n");
   for (int i = 0; i < width_; i++) {
     for (int j=0; j < height_; j++) {
       grid_cell_[i*width_+j]->organism_ = new Organism(new DNA(org->dna_));
@@ -102,9 +102,9 @@ void World::run_evolution() {
 
     stats();
     if (time_%100 == 0) {
-      printf(
-          "Evolution at step %d -- Number of Organism %d  (Dead: %d -- Mutant: %d)-- Min Fitness: %f -- Max Fitness: %f\n",
-          time_, living_one, death_, new_mutant_, min_fitness_, max_fitness_);
+      #ifdef PRINT_TRACE
+      printf("Evolution at step %d -- Number of Organism %d  (Dead: %d -- Mutant: %d)-- Min Fitness: %f -- Max Fitness: %f\n",time_, living_one, death_, new_mutant_, min_fitness_, max_fitness_);
+      #endif
       statfile_best_.flush();
       statfile_mean_.flush();
     }
@@ -120,8 +120,7 @@ void World::evolution_step() {
   max_fitness_ = 0;
 
   Organism* best;
-
-  #pragma omp parallel for
+  #pragma omp parallel for num_threads(NUM_THREADS_OMP)
   for (int i = 0; i < width_*height_; i++) {
       if (grid_cell_[i]->organism_ != nullptr) {
         grid_cell_[i]->organism_->activate_pump();
@@ -138,7 +137,7 @@ void World::evolution_step() {
       }
   }
 
-  #pragma omp parallel for 
+  #pragma omp parallel for num_threads(NUM_THREADS_OMP)  
   for (int i = 0; i < width_*height_; i++) {
       if (grid_cell_[i]->organism_ != nullptr) {
 
@@ -153,7 +152,7 @@ void World::evolution_step() {
       }
   }
 
-  #pragma omp parallel for
+  #pragma omp parallel for num_threads(NUM_THREADS_OMP)
   for (int i = 0; i < width_*height_; i++) {
       if (grid_cell_[i]->organism_ == nullptr) {
         Organism* org_n = nullptr;
@@ -170,7 +169,6 @@ void World::evolution_step() {
                 }
              }
           }
-        
 
         if (org_n != nullptr) {
           new_mutant_++;
@@ -183,7 +181,7 @@ void World::evolution_step() {
       }
   }
 
-  #pragma omp parallel for
+  #pragma omp parallel for num_threads(NUM_THREADS_OMP)
   for (int i = 0; i < width_*height_; i++) {
       grid_cell_[i]->diffuse_protein();
       grid_cell_[i]->degrade_protein();
@@ -195,7 +193,7 @@ void World::test_mutate() {
   float fitness = 0.0;
   Organism* org = nullptr;
   DNA* dna = nullptr;
-  printf("Searching for a viable organism ");
+  PRINT("Searching for a viable organism ");
 
   long i = 0;
   while (fitness <= 0.0) {
