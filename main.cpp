@@ -4,7 +4,7 @@
 #include <chrono>
 #include "src/main.h"
 
-int NUM_THREADS_OMP = 1;
+int NUM_THREADS_OMP = 16;
 
 using namespace std;
 

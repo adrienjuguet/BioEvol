@@ -1,4 +1,4 @@
-//#define PRINT_TRACE
+#define PRINT_TRACE
 #ifdef PRINT_TRACE
 #define PRINT(p) printf(p)
 #else

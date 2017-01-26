@@ -22,7 +22,6 @@ void Common::init_binding_matrix(uint32_t seed) {
         matrix_binding_[i]=dis_number(float_gen_);
       else
         matrix_binding_[i]=0;
-    
   }
 
 }

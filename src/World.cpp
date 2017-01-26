@@ -87,7 +87,6 @@ void World::init_environment() {
 }
 
 void World::run_evolution() {
-  #pragma omp simd
   while (time_ < Common::Number_Evolution_Step) {
     evolution_step();
     int living_one = 0;
