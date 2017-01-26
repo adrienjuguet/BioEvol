@@ -61,13 +61,12 @@ void World::random_population() {
   max_fitness_ = org->fitness_;
 
   PRINT("Found !\nFilling the grid\n");
-  #pragma omp parallel for
+  #pragma omp parallel for num_threads(NUM_THREADS_OMP)
   for (int i = 0; i < width_*height_; i++) {
       grid_cell_[i]->organism_ = new Organism(new DNA(org->dna_));
       grid_cell_[i]->organism_->init_organism();
       grid_cell_[i]->organism_->gridcell_ = grid_cell_[i];
   }
-
   delete org;
 }
 
@@ -77,8 +76,8 @@ void World::init_environment() {
 
   for (int i = 0; i < Common::Metabolic_Error_Precision; i++)
     env[i] = dis(global_gen_);
-
-  #pragma omp parallel for
+/**pragma n'amélirant pas les performances**/
+  //#pragma omp parallel for num_threads(NUM_THREADS_OMP)
   for (int i = 0; i < width_*height_; i++) {
 	  for (int k = 0; k < Common::Metabolic_Error_Precision; k++) {
 		grid_cell_[i]->environment_target[k] = env[k];
@@ -118,6 +117,7 @@ void World::evolution_step() {
   max_fitness_ = 0;
 
   Organism* best;
+  //std::cout<< NUM_THREADS_OMP<<std::endl;
   #pragma omp parallel for num_threads(NUM_THREADS_OMP)
   for (int i = 0; i < width_*height_; i++) {
       if (grid_cell_[i]->organism_ != nullptr) {
@@ -276,8 +276,8 @@ void World::stats() {
   float avg_move_success = 0;
   float avg_dupli_sucess = 0;
   float nb_indiv=0;
-
-  #pragma omp parallel for
+/**pragma n'améliorant pas les performances**/
+  //#pragma omp parallel for num_threads(NUM_THREADS_OMP)
   for (int i = 0; i < width_*height_; i++) {
 
       if (grid_cell_[i]->organism_ != nullptr) {
