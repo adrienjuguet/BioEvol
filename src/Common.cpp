@@ -6,6 +6,7 @@
 #include <random>
 #include <zlib.h>
 #include "Common.h"
+#include "main.h"
 
 float Common::matrix_binding_[BINDING_MATRIX_SIZE*BINDING_MATRIX_SIZE];
 
@@ -16,14 +17,22 @@ void Common::init_binding_matrix(uint32_t seed) {
   std::uniform_real_distribution<float> dis_number(-1, 1);
   std::uniform_int_distribution<int8_t> dis_percent(0,100);
 /**pragma n'améliorant pas les performances**/
-  //#pragma omp parallel for num_threads(NUM_THREADS_OMP)
+  #pragma omp parallel for num_threads(NUM_THREADS_OMP)
   for (int i = 0; i < BINDING_MATRIX_SIZE*BINDING_MATRIX_SIZE; i++) {
       if (dis_percent(float_gen_) > BINDING_MATRIX_ZERO_PERCENT)
         matrix_binding_[i]=dis_number(float_gen_);
       else
         matrix_binding_[i]=0;
   }
-
+/*
+  for (int i = 0; i < BINDING_MATRIX_SIZE; i++) {
+    for (int j = 0; j < BINDING_MATRIX_SIZE; j++) {
+      if (dis_percent(float_gen_) > BINDING_MATRIX_ZERO_PERCENT)
+        matrix_binding_[i*BINDING_MATRIX_SIZE+j]=dis_number(float_gen_);
+      else
+        matrix_binding_[i*BINDING_MATRIX_SIZE+j]=0;
+    }
+  }*/
 }
 
 void Common::save_binding_matrix() {

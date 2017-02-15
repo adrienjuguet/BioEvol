@@ -263,65 +263,57 @@ void Organism::compute_protein_concentration() {
   #pragma omp simd
   for (int rna_id = 0; rna_id < rna_list_.size(); rna_id++) {
     float delta_pos = 0, delta_neg = 0;
-
     for(int i = 0; i< rna_influence_[rna_id].size(); i++)
-      {
-	auto prot = rna_influence_[rna_id].begin();
-	advance(prot, i);
-	if ((*prot).second > 0)
-	  delta_pos += (*prot).second * protein_list_map_[(*prot).first]->concentration_;
-	else
-	  delta_neg -= (*prot).second * protein_list_map_[(*prot).first]->concentration_;
-      }
-	auto prot = rna_influence_[rna_id].begin(); 
+    {
+        auto prot = rna_influence_[rna_id].begin();
+        advance(prot, i);
+        if ((*prot).second > 0)
+          delta_pos += (*prot).second * protein_list_map_[(*prot).first]->concentration_;
+        else
+          delta_neg -= (*prot).second * protein_list_map_[(*prot).first]->concentration_;
+    }
 
     float delta_pos_pow_n;
     float delta_neg_pow_n;
- 
+
     if (delta_pos == 0) delta_pos_pow_n = 0;
-	else { 
-		{
-			auto it = cache_pos.find(delta_pos);
-			if (it != cache_pos.end())
-			{
-				delta_pos_pow_n = it->second; 
-				//cout << "Cache pos hit : " << delta_pos <<" , "<< delta_pos_pow_n << endl;
-			}
-			//Sinon on calcule et on la met dans le cache
-			else {
-				delta_pos_pow_n = pow(delta_pos,Common::hill_shape_n);
-				cache_pos.insert({delta_pos, delta_pos_pow_n});
-				//cout << "Cache pos miss : " << delta_pos <<" , "<< delta_pos_pow_n<< endl;
-			}
-		}
-	}
-	
-	
-	
-	if (delta_neg == 0) delta_neg_pow_n = 0;	
-	else {
-			auto it_neg = cache_neg.find(delta_pos);
-			if (it_neg != cache_neg.end()) 
-			{
-				delta_neg_pow_n = it_neg->second;  
-				//cout << "Cache neg hit : " << delta_neg <<" , "<< delta_neg_pow_n << endl;
-			}
-			else {
-				delta_neg_pow_n = pow(delta_neg,Common::hill_shape_n);
-				cache_neg.insert({delta_neg, delta_neg_pow_n});
-				//cout << "Cache neg miss : " << delta_neg <<" , "<< delta_neg_pow_n<< endl;
-			}
-	}	
-    rna_list_[rna_id]->current_concentration_ = rna_list_[rna_id]->concentration_base_
+       else { 
+                        auto i = cache_pos.find(delta_pos);
+                        if (i != cache_pos.end())
+                        {
+                                delta_pos_pow_n = i->second; 
+                                //cout << "Cache pos hit : " << delta_pos <<" , "<< delta_pos_pow_n $
+                        }
+                        //Sinon on calcule et on la met dans le cache
+                        else {
+                                delta_pos_pow_n = pow(delta_pos,Common::hill_shape_n);
+                                cache_pos.insert({delta_pos, delta_pos_pow_n});
+                                //cout << "Cache pos miss : " << delta_pos <<" , "<< delta_pos_pow_n$
+                        }
+        }
+
+    if (delta_neg == 0) delta_neg_pow_n = 0;
+        else {
+                        auto i_neg = cache_neg.find(delta_pos);
+                        if (i_neg != cache_neg.end()) 
+                        {
+                                delta_neg_pow_n = i_neg->second;  
+                                //cout << "Cache neg hit : " << delta_neg <<" , "<< delta_neg_pow_n $
+                        }
+                        else {
+                                delta_neg_pow_n = pow(delta_neg,Common::hill_shape_n);
+                                cache_neg.insert({delta_neg, delta_neg_pow_n});
+                                //cout << "Cache neg miss : " << delta_neg <<" , "<< delta_neg_pow_n$
+                        }
+        }
+     rna_list_[rna_id]->current_concentration_ = rna_list_[rna_id]->concentration_base_
                                * (Common::hill_shape
                                   / (delta_neg_pow_n + Common::hill_shape))
                                * (1 + ((1 / rna_list_[rna_id]->concentration_base_) - 1)
                                       * (delta_pos_pow_n /
                                          (delta_pos_pow_n +
                                              Common::hill_shape)));
-    //rna_id++;
   }
-  
 
   std::unordered_map<float,float> delta_concentration;
   for (auto rna : rna_produce_protein_) {

@@ -117,6 +117,7 @@ void World::evolution_step() {
   max_fitness_ = 0;
 
   Organism* best;
+
   //std::cout<< NUM_THREADS_OMP<<std::endl;
   #pragma omp parallel for num_threads(NUM_THREADS_OMP)
   for (int i = 0; i < width_*height_; i++) {
@@ -135,7 +136,7 @@ void World::evolution_step() {
       }
   }
 
-  #pragma omp parallel for num_threads(NUM_THREADS_OMP)  
+  #pragma omp parallel for num_threads(NUM_THREADS_OMP)
   for (int i = 0; i < width_*height_; i++) {
       if (grid_cell_[i]->organism_ != nullptr) {
 
@@ -183,7 +184,90 @@ void World::evolution_step() {
   for (int i = 0; i < width_*height_; i++) {
       grid_cell_[i]->diffuse_protein();
       grid_cell_[i]->degrade_protein();
+  } /***yo***/
+/*
+  for (int i = 0; i < width_; i++) {
+    for (int j = 0; j < height_; j++) {
+      if (grid_cell_[i * width_ + j]->organism_ != nullptr) {
+        grid_cell_[i * width_ + j]->organism_->activate_pump();
+        grid_cell_[i * width_ + j]->organism_->build_regulation_network();
+
+        for (int t = 0; t < Common::Number_Degradation_Step; t++)
+          grid_cell_[i * width_ +
+                     j]->organism_->compute_protein_concentration();
+
+        if (grid_cell_[i * width_ + j]->organism_->dying_or_not()) {
+          delete grid_cell_[i * width_ + j]->organism_;
+          grid_cell_[i * width_ + j]->organism_ = nullptr;
+          death_++;
+        }
+      }
+    }
   }
+
+  for (int i = 0; i < width_; i++) {
+    for (int j = 0; j < height_; j++) {
+      if (grid_cell_[i * width_ + j]->organism_ != nullptr) {
+
+        grid_cell_[i * width_ + j]->organism_->compute_fitness();
+
+        max_fitness_ = grid_cell_[i * width_ + j]->organism_->fitness_ >
+                       max_fitness_ ? grid_cell_[i * width_ +
+                                                 j]->organism_->fitness_
+                                    : max_fitness_;
+        min_fitness_ = grid_cell_[i * width_ + j]->organism_->fitness_ <
+                       min_fitness_ ? grid_cell_[i * width_ +
+                                                 j]->organism_->fitness_
+                                    : min_fitness_;
+      }
+    }
+  }
+
+  for (int i = 0; i < width_; i++) {
+    for (int j = 0; j < height_; j++) {
+
+      if (grid_cell_[i * width_ + j]->organism_ == nullptr) {
+        Organism* org_n = nullptr;
+
+        for (int x = i - Common::Duplicate_Neighbors_Offset;
+             x <= i + Common::Duplicate_Neighbors_Offset; x++) {
+          for (int y = j - Common::Duplicate_Neighbors_Offset;
+               y <= j + Common::Duplicate_Neighbors_Offset; y++) {
+            if (x >= 0 && x < width_)
+              if (y >= 0 && y < height_) {
+                if (grid_cell_[x * width_ + y]->organism_ != nullptr) {
+                  if (org_n != nullptr)
+                    org_n = grid_cell_[x * width_ + y]->organism_->fitness_ <
+                          org_n->fitness_ ? grid_cell_[x * width_ +
+                                                       y]->organism_
+                                          : org_n;
+                  else
+                    org_n = grid_cell_[x * width_ + y]->organism_;
+                }
+              }
+          }
+        }
+
+        if (org_n != nullptr) {
+          new_mutant_++;
+          org_n->dupli_success_++;
+          grid_cell_[i * width_ + j]->organism_ = new Organism(new DNA(org_n->dna_));
+          grid_cell_[i * width_ + j]->organism_->gridcell_ = grid_cell_[
+              i * width_ + j];
+          grid_cell_[i * width_ + j]->organism_->mutate();
+          grid_cell_[i * width_ + j]->organism_->init_organism();
+        }
+      }
+    }
+  }
+
+
+  for (int i = 0; i < width_; i++) {
+    for (int j = 0; j < height_; j++) {
+      grid_cell_[i * width_ + j]->diffuse_protein();
+      grid_cell_[i * width_ + j]->degrade_protein();
+    }
+  }*/
 }
 
 void World::test_mutate() {
@@ -279,7 +363,6 @@ void World::stats() {
 /**pragma n'améliorant pas les performances**/
   //#pragma omp parallel for num_threads(NUM_THREADS_OMP)
   for (int i = 0; i < width_*height_; i++) {
-
       if (grid_cell_[i]->organism_ != nullptr) {
         if (grid_cell_[i]->organism_->fitness_< best_fitness) {
           best = grid_cell_[i]->organism_;

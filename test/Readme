@@ -1,0 +1,13 @@
+test.py : 	-Exécute 10 fois l'application avec le nombre de threads par défaut et renvoie le temps d'exécution moyen
+
+test1-256.py : 	-Exécute l'application en incrémentant le nombre de threads en puissance de deux entre 1 et 256. 
+		-Execute 10 fois l'application pour un nombre de threads donné et fait la moyenne
+		-Ecrit les résultats dans un fichier csv 
+		-Nécessite la taille de la matrice carré en paramètre (ex : ./test1-256.py 32)
+
+test16-64.py :	-Exécute l'application en incrémentant le nombre de threads de 2 en 2 entre 16 et 64.
+		-Execute 10 fois l'application pour un nombre de threads donné et fait la moyenne
+               	-Ecrit les résultats dans un fichier csv
+               	-Nécessite la taille de la matrice carré en paramètre (ex : ./test1-256.py 32)
+
+Résultats disponible dans le dossier "output"
